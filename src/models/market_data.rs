@@ -96,6 +96,7 @@ pub struct GetInstrumentsRequest {
     pub expired: Option<bool>,
 }
 
+
 impl GetInstrumentsRequest {
     pub fn new(currency: Currency) -> Self {
         Self {
@@ -152,6 +153,43 @@ impl Request for GetInstrumentsRequest {
 }
 
 #[derive(Deserialize, Serialize, Clone, Debug, Default)]
+pub struct GetInstrumentRequest {
+    pub instrument_name: String
+}
+
+impl GetInstrumentRequest {
+    pub fn new(instrument_name: &str) -> Self {
+        Self {
+            instrument_name: instrument_name.to_string(),
+            ..Default::default()
+        }
+    }
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct GetInstrumentResponse {
+    pub base_currency: String,
+    pub contract_size: f64,
+    pub creation_timestamp: u64,
+    pub expiration_timestamp: u64,
+    pub instrument_name: String,
+    pub instrument_id: u64,
+    pub is_active: bool,
+    pub kind: AssetKind,
+    pub min_trade_amount: f64,
+    pub option_type: Option<String>,
+    pub quote_currency: Option<Currency>,
+    pub settlement_period: String,
+    pub strike: Option<f64>,
+    pub tick_size: f64,
+}
+
+impl Request for GetInstrumentRequest {
+    const METHOD: &'static str = "public/get_instrument";
+    type Response = GetInstrumentResponse;
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
 pub struct GetFundingRateValueRequest {
     pub instrument_name: String,
     pub start_timestamp: u64,
@@ -182,6 +220,13 @@ pub struct GetOrderBookRequest {
     depth: Option<u64>,
 }
 
+#[derive(Deserialize, Serialize, Clone, Debug, Default)]
+pub struct GetOrderBookByInstrumentIdRequest {
+    instrument_id: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    depth: Option<u64>,
+}
+
 impl GetOrderBookRequest {
     pub fn new(instrument_name: &str) -> Self {
         Self {
@@ -197,8 +242,28 @@ impl GetOrderBookRequest {
     }
 }
 
+impl GetOrderBookByInstrumentIdRequest {
+    pub fn new(instrument_id: u64) -> Self {
+        Self {
+            instrument_id: instrument_id,
+            ..Default::default()
+        }
+    }
+    pub fn with_depth(instrument_id: u64, depth: u64) -> Self {
+        Self {
+            instrument_id: instrument_id,
+            depth: Some(depth),
+        }
+    }
+}
+
 impl Request for GetOrderBookRequest {
     const METHOD: &'static str = "public/get_order_book";
+    type Response = GetOrderBookResponse;
+}
+
+impl Request for GetOrderBookByInstrumentIdRequest {
+    const METHOD: &'static str = "public/get_order_book_by_instrument_id";
     type Response = GetOrderBookResponse;
 }
 
@@ -211,7 +276,7 @@ pub struct GetOrderBookResponse {
     best_bid_amount: f64,
     best_bid_price: Option<f64>,
     bid_iv: Option<f64>,
-    bids: Vec<Bid>,
+    pub bids: Vec<Bid>,
     current_funding: Option<f64>,
     delivery_price: Option<f64>,
     funding_8h: Option<f64>,
@@ -229,7 +294,40 @@ pub struct GetOrderBookResponse {
     state: State,
     stats: Stats,
     timestamp: u64,
-    underlying_index: Option<f64>,
+    underlying_index: Option<String>,
+    underlying_price: Option<f64>
+}
+
+#[derive(Deserialize, Serialize, Clone, Debug)]
+pub struct GetOrderBookOptionResponse {
+    ask_iv: Option<f64>,
+    asks: Vec<Ask>,
+    best_ask_amount: f64,
+    best_ask_price: Option<f64>,
+    best_bid_amount: f64,
+    best_bid_price: Option<f64>,
+    bid_iv: Option<f64>,
+    bids: Vec<Bid>,
+    // // current_funding: Option<f64>,
+    // // delivery_price: Option<f64>,
+    change_id:u64,
+    estimated_delivery_price: f64,
+    // // funding_8h: Option<f64>,
+    greeks: Option<Greeks>,
+    index_price: f64,
+    instrument_name: String,
+    interest_rate: Option<f64>,
+    last_price: Option<f64>,
+    mark_iv: Option<f64>,
+    mark_price: f64,
+    max_price: f64,
+    min_price: f64,
+    open_interest: f64,
+    settlement_price: Option<f64>,
+    state: State,
+    stats: Stats,
+    timestamp: u64,
+    underlying_index: Option<String>,
     underlying_price: Option<f64>
 }
 
